@@ -1,0 +1,95 @@
+Sub stockValues()
+
+    Dim stockVol As Double
+    Dim stockOpen As Double
+    Dim k As Integer
+    Dim lastRow As Long
+    Dim stockDate, yearStart As String
+    Dim greatestIncrease, greatestDecrease As Double
+    Dim greatestVol As Double
+    Dim ticker1, ticker2, ticker3 As String
+    Dim wscount As Integer
+    Dim L As Integer
+    Dim ws As Worksheet ' Variable to hold each worksheet
+
+    wscount = ActiveWorkbook.Worksheets.Count
+
+    For L = 1 To wscount
+        Set ws = ActiveWorkbook.Worksheets(L) ' Set the current worksheet
+        
+        lastRow = ws.Range("A2").End(xlDown).Row
+        'yearStart = "20200102"
+        'yearEnd = "20201231"
+        yearStart = ws.Name + "0102"
+        yearEnd = ws.Name + "1231"
+
+            'header names
+            ws.Range("I1") = "Ticker"
+            ws.Range("J1") = "Yearly Change"
+            ws.Range("K1") = "Percent Change"
+            ws.Range("L1") = "Total Stock Volume"
+            ws.Range("O2") = "Greatest % Increase"
+            ws.Range("O3") = "Greatest % Decrease"
+            ws.Range("O4") = "Greatest Total Volume"
+            ws.Range("P1") = "Ticker"
+            ws.Range("Q1") = "Value"
+
+            greatestIncrease = 0
+            greatestDecrease = 0
+            greatestVol = 0
+
+        k = 2
+        For i = 2 To lastRow
+
+
+            If ws.Cells(i, 1) <> ws.Cells(i + 1, 1) Then
+                ws.Cells(k, 9) = ws.Cells(i, 1)
+                ws.Cells(k, 10) = ws.Cells(i, 6) - stockOpen
+                ws.Cells(k, 10).NumberFormat = "0.00"
+                ws.Cells(k, 11) = ((ws.Cells(i, 6) - stockOpen) / stockOpen)
+                ws.Cells(k, 11).Value = FormatPercent(ws.Cells(k, 11))
+                If ws.Cells(k, 10) > 0 Then
+                    ws.Cells(k, 10).Interior.ColorIndex = 4
+                ElseIf ws.Cells(k, 10) < 0 Then
+                    ws.Cells(k, 10).Interior.ColorIndex = 3
+                End If
+
+                'greatest/least % increase
+                If ws.Cells(k, 11) > greatestIncrease Then
+                    ticker1 = ws.Cells(k, 9)
+                    greatestIncrease = ws.Cells(k, 11)
+                End If
+
+                If ws.Cells(k, 11) < greatestDecrease Then
+                    ticker2 = ws.Cells(k, 9)
+                    greatestDecrease = ws.Cells(k, 11)
+                End If
+
+                ws.Cells(k, 12) = stockVol
+                'greatest volume total
+                If ws.Cells(k, 12) > greatestVol Then
+                    ticker3 = ws.Cells(k, 9)
+                    greatestVol = ws.Cells(k, 12)
+                End If
+
+          k = k + 1
+                stockVol = 0
+                stockOpen = 0
+            Else
+                stockVol = stockVol + ws.Cells(i, 7)
+
+                stockDate = ws.Cells(i, 2)
+                If stockDate = yearStart Then
+                    stockOpen = ws.Cells(i, 3)
+                End If
+            End If
+        Next i
+
+        ws.Cells(2, 16) = ticker1
+        ws.Cells(3, 16) = ticker2
+        ws.Cells(4, 16) = ticker3
+        ws.Cells(2, 17) = FormatPercent(greatestIncrease)
+        ws.Cells(3, 17) = FormatPercent(greatestDecrease)
+        ws.Cells(4, 17) = greatestVol
+    Next L
+End Sub
